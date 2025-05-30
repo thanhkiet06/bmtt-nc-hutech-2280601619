@@ -1,57 +1,236 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <title>Caesar Cipher</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <title>Rail Fence Cipher</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            margin-top: 30px;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .cipher-title {
+            text-align: center;
+            font-weight: bold;
+            font-size: 28px;
+            color: #343a40;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #007bff;
+        }
+
+        .section-title {
+            font-weight: bold;
+            font-size: 18px;
+            color: #007bff;
+            padding: 8px 0;
+            border-bottom: 1px dashed #dee2e6;
+        }
+
+        .result-box {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+        }
+
+        .encrypt-result {
+            color: #007bff;
+            font-weight: 500;
+        }
+
+        .decrypt-result {
+            color: #28a745;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+    </style>
 </head>
+
 <body>
     <div class="container">
-        <table class="table">
-            <!-- Tiêu đề -->
-            <tr>
-                <td style="text-align: center; font-weight: bold; font-size: 25px;">RAILFENCE CIPHER</td>
-            </tr>
+        <div class="cipher-title">RAIL FENCE CIPHER</div>
 
+        <table class="table">
             <!-- Phần mã hóa -->
             <tr>
-                <td style="font-weight: bold; color: blue;">ENCRYPTION</td>
+                <td class="section-title">ENCRYPTION</td>
             </tr>
             <tr>
                 <td>
-                    <form method="POST" action="railfence/encrypt">
+                    <form id="encryptForm" onsubmit="return encrypt();">
                         <div class="mb-3">
                             <label class="form-label">Plain text:</label>
-                            <input type="text" class="form-control" name="inputPlainText" placeholder="Input Plain Text" required autofocus>
+                            <input type="text" class="form-control" id="inputPlainText" placeholder="Input Plain Text"
+                                required autofocus>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Key:</label>
-                            <input type="number" class="form-control" name="inputKeyPlain" placeholder="Input Key" required>
+                            <label class="form-label">Key (number of rails):</label>
+                            <input type="number" min="2" class="form-control" id="inputKeyPlain" placeholder="Input Key"
+                                required>
                         </div>
                         <button type="submit" class="btn btn-primary">Encrypt</button>
                     </form>
+                    <div id="encryptResult" class="result-box mt-3" style="display: none;">
+                        <strong>Encrypted Text:</strong>
+                        <span id="encryptedText" class="encrypt-result"></span>
+                    </div>
                 </td>
             </tr>
 
             <!-- Phần giải mã -->
             <tr>
-                <td style="font-weight: bold; color: blue;">DECRYPTION</td>
+                <td class="section-title">DECRYPTION</td>
             </tr>
             <tr>
                 <td>
-                    <form method="POST" action="railfence/decrypt">
+                    <form id="decryptForm" onsubmit="return decrypt();">
                         <div class="mb-3">
                             <label class="form-label">Cipher text:</label>
-                            <input type="text" class="form-control" name="inputCipherText" placeholder="Input Cipher Text" required>
+                            <input type="text" class="form-control" id="inputCipherText" placeholder="Input Cipher Text"
+                                required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Key:</label>
-                            <input type="number" class="form-control" name="inputKeyCipher" placeholder="Input Key" required>
+                            <label class="form-label">Key (number of rails):</label>
+                            <input type="number" min="2" class="form-control" id="inputKeyCipher"
+                                placeholder="Input Key" required>
                         </div>
                         <button type="submit" class="btn btn-primary">Decrypt</button>
                     </form>
+                    <div id="decryptResult" class="result-box mt-3" style="display: none;">
+                        <strong>Decrypted Text:</strong>
+                        <span id="decryptedText" class="decrypt-result"></span>
+                    </div>
                 </td>
             </tr>
         </table>
     </div>
+
+    <script>
+        function encrypt() {
+            const plainText = document.getElementById('inputPlainText').value;
+            const rails = parseInt(document.getElementById('inputKeyPlain').value);
+
+            // Thực hiện mã hóa Rail Fence
+            const result = railFenceEncrypt(plainText, rails);
+
+            // Hiển thị kết quả
+            document.getElementById('encryptedText').textContent = result;
+            document.getElementById('encryptResult').style.display = 'block';
+
+            return false;
+        }
+
+        function decrypt() {
+            const cipherText = document.getElementById('inputCipherText').value;
+            const rails = parseInt(document.getElementById('inputKeyCipher').value);
+
+            // Thực hiện giải mã Rail Fence
+            const result = railFenceDecrypt(cipherText, rails);
+
+            // Hiển thị kết quả
+            document.getElementById('decryptedText').textContent = result;
+            document.getElementById('decryptResult').style.display = 'block';
+
+            return false;
+        }
+
+        // Hàm mã hóa Rail Fence
+        function railFenceEncrypt(text, rails) {
+            if (rails < 2) return text;
+
+            const fence = [];
+            for (let i = 0; i < rails; i++) {
+                fence.push([]);
+            }
+
+            let rail = 0;
+            let direction = 1;
+
+            for (let char of text) {
+                fence[rail].push(char);
+                rail += direction;
+
+                if (rail === rails - 1 || rail === 0) {
+                    direction = -direction;
+                }
+            }
+
+            let result = '';
+            for (let row of fence) {
+                result += row.join('');
+            }
+
+            return result;
+        }
+
+        // Hàm giải mã Rail Fence
+        function railFenceDecrypt(cipherText, rails) {
+            if (rails < 2) return cipherText;
+
+            // Tạo pattern
+            const pattern = [];
+            let rail = 0;
+            let direction = 1;
+
+            for (let i = 0; i < cipherText.length; i++) {
+                pattern.push(rail);
+                rail += direction;
+
+                if (rail === rails - 1 || rail === 0) {
+                    direction = -direction;
+                }
+            }
+
+            // Xây dựng các rail
+            const fence = [];
+            for (let i = 0; i < rails; i++) {
+                fence.push([]);
+            }
+
+            // Phân phối các ký tự vào các rail
+            let currentPos = 0;
+            for (let railNum = 0; railNum < rails; railNum++) {
+                for (let i = 0; i < pattern.length; i++) {
+                    if (pattern[i] === railNum) {
+                        if (currentPos < cipherText.length) {
+                            fence[railNum].push(cipherText[currentPos++]);
+                        }
+                    }
+                }
+            }
+
+            // Đọc theo pattern
+            const railPointers = new Array(rails).fill(0);
+            let result = '';
+            rail = 0;
+            direction = 1;
+
+            for (let i = 0; i < cipherText.length; i++) {
+                result += fence[rail][railPointers[rail]++];
+                rail += direction;
+
+                if (rail === rails - 1 || rail === 0) {
+                    direction = -direction;
+                }
+            }
+
+            return result;
+        }
+    </script>
 </body>
+
 </html>

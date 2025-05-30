@@ -1,57 +1,208 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <title>Caesar Cipher</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <title>Transposition Cipher</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            margin-top: 30px;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .cipher-title {
+            text-align: center;
+            font-weight: bold;
+            font-size: 28px;
+            color: #343a40;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #007bff;
+        }
+
+        .section-title {
+            font-weight: bold;
+            font-size: 18px;
+            color: #007bff;
+            padding: 8px 0;
+            border-bottom: 1px dashed #dee2e6;
+        }
+
+        .result-box {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+        }
+
+        .encrypt-result {
+            color: #007bff;
+            font-weight: 500;
+        }
+
+        .decrypt-result {
+            color: #28a745;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+    </style>
 </head>
+
 <body>
     <div class="container">
-        <table class="table">
-            <!-- Tiêu đề -->
-            <tr>
-                <td style="text-align: center; font-weight: bold; font-size: 25px;">TRANS CIPHER</td>
-            </tr>
+        <div class="cipher-title">TRANSPOSITION CIPHER</div>
 
+        <table class="table">
             <!-- Phần mã hóa -->
             <tr>
-                <td style="font-weight: bold; color: blue;">ENCRYPTION</td>
+                <td class="section-title">ENCRYPTION</td>
             </tr>
             <tr>
                 <td>
-                    <form method="POST" action="transposition/encrypt">
+                    <form id="encryptForm" onsubmit="return encrypt();">
                         <div class="mb-3">
                             <label class="form-label">Plain text:</label>
-                            <input type="text" class="form-control" name="inputPlainText" placeholder="Input Plain Text" required autofocus>
+                            <input type="text" class="form-control" id="inputPlainText" placeholder="Input Plain Text"
+                                required autofocus>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Key:</label>
-                            <input type="number" class="form-control" name="inputKeyPlain" placeholder="Input Key" required>
+                            <label class="form-label">Key (number of columns):</label>
+                            <input type="number" min="1" class="form-control" id="inputKeyPlain" placeholder="Input Key"
+                                required>
                         </div>
                         <button type="submit" class="btn btn-primary">Encrypt</button>
                     </form>
+                    <div id="encryptResult" class="result-box mt-3" style="display: none;">
+                        <strong>Encrypted Text:</strong>
+                        <span id="encryptedText" class="encrypt-result"></span>
+                    </div>
                 </td>
             </tr>
 
             <!-- Phần giải mã -->
             <tr>
-                <td style="font-weight: bold; color: blue;">DECRYPTION</td>
+                <td class="section-title">DECRYPTION</td>
             </tr>
             <tr>
                 <td>
-                    <form method="POST" action="transposition/decrypt">
+                    <form id="decryptForm" onsubmit="return decrypt();">
                         <div class="mb-3">
                             <label class="form-label">Cipher text:</label>
-                            <input type="text" class="form-control" name="inputCipherText" placeholder="Input Cipher Text" required>
+                            <input type="text" class="form-control" id="inputCipherText" placeholder="Input Cipher Text"
+                                required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Key:</label>
-                            <input type="number" class="form-control" name="inputKeyCipher" placeholder="Input Key" required>
+                            <label class="form-label">Key (number of columns):</label>
+                            <input type="number" min="1" class="form-control" id="inputKeyCipher"
+                                placeholder="Input Key" required>
                         </div>
                         <button type="submit" class="btn btn-primary">Decrypt</button>
                     </form>
+                    <div id="decryptResult" class="result-box mt-3" style="display: none;">
+                        <strong>Decrypted Text:</strong>
+                        <span id="decryptedText" class="decrypt-result"></span>
+                    </div>
                 </td>
             </tr>
         </table>
     </div>
+
+    <script>
+        function encrypt() {
+            const plainText = document.getElementById('inputPlainText').value.replace(/\s+/g, '').toUpperCase();
+            const columns = parseInt(document.getElementById('inputKeyPlain').value);
+
+            // Thực hiện mã hóa Transposition
+            const result = transpositionEncrypt(plainText, columns);
+
+            // Hiển thị kết quả
+            document.getElementById('encryptedText').textContent = result;
+            document.getElementById('encryptResult').style.display = 'block';
+
+            return false;
+        }
+
+        function decrypt() {
+            const cipherText = document.getElementById('inputCipherText').value.replace(/\s+/g, '').toUpperCase();
+            const columns = parseInt(document.getElementById('inputKeyCipher').value);
+
+            // Thực hiện giải mã Transposition
+            const result = transpositionDecrypt(cipherText, columns);
+
+            // Hiển thị kết quả
+            document.getElementById('decryptedText').textContent = result;
+            document.getElementById('decryptResult').style.display = 'block';
+
+            return false;
+        }
+
+        // Hàm mã hóa Transposition
+        function transpositionEncrypt(text, columns) {
+            if (columns <= 0) return text;
+
+            // Tạo ma trận
+            const rows = Math.ceil(text.length / columns);
+            let matrix = [];
+
+            // Điền text vào ma trận theo hàng
+            for (let i = 0; i < rows; i++) {
+                matrix[i] = [];
+                for (let j = 0; j < columns; j++) {
+                    const index = i * columns + j;
+                    matrix[i][j] = index < text.length ? text[index] : 'X';
+                }
+            }
+
+            // Đọc theo cột để tạo cipher text
+            let cipherText = '';
+            for (let j = 0; j < columns; j++) {
+                for (let i = 0; i < rows; i++) {
+                    cipherText += matrix[i][j];
+                }
+            }
+
+            return cipherText;
+        }
+
+        // Hàm giải mã Transposition
+        function transpositionDecrypt(cipherText, columns) {
+            if (columns <= 0) return cipherText;
+
+            const rows = Math.ceil(cipherText.length / columns);
+            let matrix = [];
+
+            // Điền cipher text vào ma trận theo cột
+            for (let j = 0; j < columns; j++) {
+                for (let i = 0; i < rows; i++) {
+                    const index = j * rows + i;
+                    if (!matrix[i]) matrix[i] = [];
+                    matrix[i][j] = index < cipherText.length ? cipherText[index] : 'X';
+                }
+            }
+
+            // Đọc theo hàng để tạo plain text
+            let plainText = '';
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < columns; j++) {
+                    plainText += matrix[i][j];
+                }
+            }
+
+            return plainText;
+        }
+    </script>
 </body>
+
 </html>
