@@ -1,44 +1,38 @@
-import ecdsa
-import os
+import ecdsa, os
 
-KEYS_DIR = os.path.join('cipher', 'ecc', 'keys')
-PRIVATE_KEY_PATH = os.path.join(KEYS_DIR, 'privateKey.pem')
-PUBLIC_KEY_PATH = os.path.join(KEYS_DIR, 'publicKey.pem')
-
-if not os.path.exists(KEYS_DIR):
-    os.makedirs(KEYS_DIR)
+if not os.path.exists('cipher/ecc/keys'):
+    os.makedirs('cipher/ecc/keys')
 
 class ECCCipher:
     def __init__(self):
         pass
 
     def generate_keys(self):
-        sk = ecdsa.SigningKey.generate(curve=ecdsa.SECP256k1)  # Chỉ định curve rõ ràng
-        vk = sk.get_verifying_key()
+        sk = ecdsa.SigningKey.generate()  # Tạo khóa riêng tư
+        vk = sk.get_verifying_key()  # Lấy khóa công khai từ khóa riêng tư
 
-        with open(PRIVATE_KEY_PATH, 'wb') as p:
+        with open('cipher/ecc/keys/privateKey.pem', 'wb') as p:
             p.write(sk.to_pem())
 
-        with open(PUBLIC_KEY_PATH, 'wb') as p:
+        with open('cipher/ecc/keys/publicKey.pem', 'wb') as p:
             p.write(vk.to_pem())
 
     def load_keys(self):
-        with open(PRIVATE_KEY_PATH, 'rb') as p:
-            sk = ecdsa.SigningKey.from_pem(p.read())
+        with open('cipher/ecc/keys/privateKey.pem', 'rb') as p:
+            sk = ecdsa.SigningKey.from_pem(p.read())  # Đúng kiểu dữ liệu
 
-        with open(PUBLIC_KEY_PATH, 'rb') as p:
+        with open('cipher/ecc/keys/publicKey.pem', 'rb') as p:
             vk = ecdsa.VerifyingKey.from_pem(p.read())
 
-        return {'private_key': sk, 'public_key': vk}
+        return {'private_key': sk, 'public_key': vk}  # Đảm bảo sk là SigningKey
+
 
     def sign(self, message, key):
-        # Ký dữ liệu bằng khóa riêng tư, dùng utf-8 để hỗ trợ Unicode
-        return key.sign(message.encode('utf-8'))
+        # Ký dữ liệu bằng khóa riêng tư
+        return key.sign(message.encode('ascii'))
 
     def verify(self, message, signature, key):
         try:
-            return key.verify(signature, message.encode('utf-8'))
+            return key.verify(signature, message.encode('ascii'))
         except ecdsa.BadSignatureError:
-            return False
-        except Exception:
             return False
